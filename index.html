@@ -5,28 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ScanShield | Vulnerability Scanner</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .error-message {
+      color: #e53e3e; /* Red color for error messages */
+    }
+    .success-message {
+      color: #38a169; /* Green color for success messages */
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
 
-  <div class="bg-white p-6 rounded shadow max-w-md w-full">
-    <h1 class="text-xl font-bold mb-4 text-center">🔍 Website Vulnerability Scanner</h1>
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+    <h1 class="text-3xl font-bold mb-4 text-center text-indigo-600">Website Vulnerability Scanner</h1>
+    <h2 class="text-xl font-semibold mb-4 text-center text-gray-700">🔍 Scan your website for vulnerabilities</h2>
 
-    <input id="target-url" type="url" placeholder="https://example.com" class="border p-2 rounded w-full mb-3">
+    <input id="target-url" type="url" placeholder="https://example.com" class="border p-2 rounded w-full mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Target URL">
+    <div id="error-message" class="error-message hidden mb-2 text-sm"></div>
 
-    <button id="start-scan" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded w-full mb-4">
+    <button id="start-scan" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded w-full transition duration-200">
       Scan Now
     </button>
 
-    <div id="scan-status" class="hidden">
+    <div id="scan-status" class="hidden mt-4" aria-live="polite">
       <div class="mb-2 text-sm text-gray-600">Scan Progress: <span id="scan-percentage">0%</span></div>
       <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
-        <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full" style="width: 0%;"></div>
+        <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
       </div>
       <div id="current-test" class="text-sm text-gray-700">Starting scan...</div>
     </div>
 
-    <div id="results" class="hidden mt-4 text-sm text-green-700">
-      ✅ Scan Completed! No critical issues found.
+    <div id="results" class="hidden mt-4 text-sm" aria-live="assertive">
+      <div class="success-message text-lg font-bold">✅ Scan Completed!</div>
+      <div class="text-gray-700">No critical issues found.</div>
     </div>
   </div>
 
@@ -38,11 +49,22 @@
     const scanPercentage = document.getElementById('scan-percentage');
     const currentTest = document.getElementById('current-test');
     const results = document.getElementById('results');
+    const errorMessage = document.getElementById('error-message');
 
+    // Function to validate URL
+    function validateURL(url) {
+      const urlPattern = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,6}(\/.*)?$/i;
+      return urlPattern.test(url);
+    }
+
+    // Event listener for the Scan button
     startButton.addEventListener('click', () => {
       const url = urlInput.value.trim();
-      if (!url) {
-        alert('Please enter a valid URL.');
+      errorMessage.classList.add('hidden'); // Hide error message initially
+
+      if (!url || !validateURL(url)) {
+        errorMessage.innerText = 'Please enter a valid and complete URL.';
+        errorMessage.classList.remove('hidden');
         return;
       }
 
@@ -70,6 +92,17 @@
           results.classList.remove('hidden');
         }
       }, 400);
+    });
+
+    // Event listener for input changes to validate URL in real-time
+    urlInput.addEventListener('input', () => {
+      const url = urlInput.value.trim();
+      if (url && !validateURL(url)) {
+        errorMessage.innerText = 'Please enter a valid and complete URL.';
+        errorMessage.classList.remove('hidden');
+      } else {
+        errorMessage.classList.add('hidden'); // Hide error message if valid
+      }
     });
   </script>
 
