@@ -2,703 +2,247 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ScanShield Pro | Advanced Web Vulnerability Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScanShield | Vulnerability Scanner</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --secondary: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
+    .error-message {
+      color: #e53e3e; /* Red color for error messages */
     }
-    
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
+    .success-message {
+      color: #38a169; /* Green color for success messages */
     }
-    
-    .dark {
-      background-color: #0f172a;
-    }
-    
-    .gradient-bg {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    }
-    
-    .scan-pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
-      }
-      70% {
-        box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
-      }
-    }
-    
-    .severity-low {
-      background-color: var(--secondary);
-    }
-    
-    .severity-medium {
-      background-color: var(--warning);
-    }
-    
-    .severity-high {
-      background-color: var(--danger);
-    }
-    
-    .progress-indicator {
-      transition: width 0.5s ease-in-out;
-    }
-    
-    .tooltip {
-      visibility: hidden;
-      width: 200px;
-      background-color: #1e293b;
-      color: #fff;
-      text-align: center;
-      border-radius: 6px;
-      padding: 5px;
-      position: absolute;
-      z-index: 1;
-      bottom: 125%;
-      left: 50%;
-      transform: translateX(-50%);
+    .fade-in {
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.5s ease-in-out;
     }
-    
-    .has-tooltip:hover .tooltip {
-      visibility: visible;
+    .fade-in.show {
       opacity: 1;
     }
-    
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    .loading-spinner {
+      display: none; /* Hide spinner by default */
     }
-    
-    .card {
-      transition: all 0.3s ease;
+    #progress-bar {
+      transition: width 0.5s ease-in-out; /* Smooth progress bar animation */
     }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
-  <!-- Header -->
-  <header class="gradient-bg text-white shadow-lg">
-    <div class="container mx-auto px-4 py-6">
-      <div class="flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-          <div class="bg-white p-2 rounded-full">
-            <img src="https://placehold.co/40x40" alt="ScanShield Pro logo - shield with checkmark" class="h-8 w-8">
-          </div>
-          <h1 class="text-2xl font-bold">ScanShield Pro</h1>
-        </div>
-        <nav class="hidden md:flex space-x-6">
-          <a href="#" class="hover:underline">Features</a>
-          <a href="#" class="hover:underline">How It Works</a>
-          <a href="#" class="hover:underline">Pricing</a>
-          <a href="#" class="hover:underline">Docs</a>
-        </nav>
-        <button id="theme-toggle" class="p-2 rounded-full bg-white/20 hover:bg-white/30 transition">
-          <span class="dark:hidden">🌙</span>
-          <span class="hidden dark:inline">☀</span>
-        </button>
-      </div>
-    </div>
-  </header>
+<body class="bg-gray-50 dark:bg-gray-800 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 
-  <!-- Main Content -->
-  <main class="flex-grow container mx-auto px-4 py-8">
-    <div class="max-w-4xl mx-auto text-center mb-12">
-      <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Advanced Web Vulnerability Scanner</h1>
-      <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">Protect your web assets with comprehensive security scanning</p>
-      
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 mb-8">
-        <div class="flex flex-col md:flex-row gap-4 mb-6">
-          <div class="relative flex-grow">
-            <input id="target-url" type="url" placeholder="https://yourwebsite.com" 
-                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white">
-            <button id="paste-btn" class="absolute right-2 top-2 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1 rounded text-sm">
-              Paste URL
-            </button>
-          </div>
-          <button id="start-scan" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-300 shadow-md">
-            Start Scan
-          </button>
-        </div>
-        
-        <div id="error-message" class="text-red-500 text-sm text-left mb-4 hidden"></div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <div class="text-sm text-gray-500 dark:text-gray-300 mb-2">Scan Type</div>
-            <select id="scan-type" class="w-full bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded px-3 py-2 text-sm">
-              <option value="quick">Quick Scan</option>
-              <option value="full" selected>Full Scan</option>
-              <option value="pentest">Penetration Test</option>
-              <option value="custom">Custom Scan</option>
-            </select>
-          </div>
-          
-          <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <div class="text-sm text-gray-500 dark:text-gray-300 mb-2">Depth Level</div>
-            <select id="scan-depth" class="w-full bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded px-3 py-2 text-sm">
-              <option value="surface">Surface Level</option>
-              <option value="medium" selected>Medium</option>
-              <option value="deep">Deep Scan</option>
-            </select>
-          </div>
-          
-          <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <div class="text-sm text-gray-500 dark:text-gray-300 mb-2">Report Format</div>
-            <select id="report-format" class="w-full bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded px-3 py-2 text-sm">
-              <option value="html" selected>HTML</option>
-              <option value="pdf">PDF</option>
-              <option value="json">JSON</option>
-              <option value="csv">CSV</option>
-            </select>
-          </div>
-        </div>
+  <nav class="absolute top-4 left-4 space-x-4 text-sm">
+    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600">Home</a>
+    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600">Scan History</a>
+    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600">About</a>
+    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600">Contact</a>
+  </nav>
+
+  <button id="theme-toggle" class="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg transition duration-300 absolute top-4 right-4" aria-label="Toggle theme">
+    Switch to Dark Theme
+  </button>
+
+  <main id="scanner" class="bg-white dark:bg-gray-700 p-4 sm:p-6 lg:p-8 rounded-lg shadow-lg max-w-md sm:max-w-sm lg:max-w-lg w-full fade-in show">
+    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 text-center text-indigo-600">Website Vulnerability Scanner</h1>
+    <h2 class="text-xl font-semibold mb-4 text-center text-gray-700 dark:text-gray-300">🔍 Scan your website for vulnerabilities</h2>
+
+    <label for="target-url" class="sr-only">URL:</label>
+    <input id="target-url" type="url" placeholder="https://example.com" class="border p-2 rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Target URL">
+    <div id="error-message" class="error-message hidden mb-2 text-sm" role="alert"></div>
+
+    <button id="start-scan" class="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-4 py-2 rounded-lg w-full transition duration-300 transform hover:scale-105">
+      Scan Now
+    </button>
+
+    <div id="loading-spinner" class="loading-spinner mb-4 hidden">
+      <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+    </div>
+
+    <div id="scan-status" class="hidden mt-4" aria-live="polite" role="status">
+      <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">Scan Progress: <span id="scan-percentage">0%</span></div>
+      <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+        <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
       </div>
-      
-      <!-- Scan Status Section -->
-      <div id="scan-status" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 mb-8">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">Scan in Progress</h2>
-          <div id="scan-percentage" class="text-lg font-medium text-indigo-600 dark:text-indigo-400">0%</div>
-        </div>
-        
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mb-6">
-          <div id="progress-bar" class="progress-indicator h-4 rounded-full gradient-bg" style="width: 0%"></div>
-        </div>
-        
-        <div id="current-test" class="text-gray-700 dark:text-gray-300 mb-6 text-left">
-          Initializing scanning engine...
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <div class="text-sm text-gray-500 dark:text-gray-300 mb-2">Time Elapsed</div>
-            <div id="time-elapsed" class="text-xl font-medium">00:00</div>
-          </div>
-          <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <div class="text-sm text-gray-500 dark:text-gray-300 mb-2">Estimated Time Remaining</div>
-            <div id="time-remaining" class="text-xl font-medium">02:30</div>
-          </div>
-        </div>
-        
-        <div id="active-tests" class="space-y-3">
-          <div class="flex items-center">
-            <div class="w-3 h-3 rounded-full bg-indigo-500 mr-3 animate-pulse"></div>
-            <span class="text-sm text-gray-700 dark:text-gray-300">Initializing scan...</span>
-          </div>
-        </div>
+      <div id="current-test" class="text-sm text-gray-700 dark:text-gray-300">Starting scan...</div>
+    </div>
+
+    <section id="results" class="hidden mt-4 text-sm fade-in">
+      <h3 class="font-semibold">Scan Report</h3>
+      <ul class="list-disc pl-5 mt-2 text-gray-700 dark:text-gray-300">
+        <li><strong>Total issues found:</strong> 0</li>
+        <li><strong>SSL Certificate:</strong> Valid ✅</li>
+        <li><strong>SQL Injection:</strong> Not Detected ✅</li>
+        <li><strong>XSS:</strong> Not Detected ✅</li>
+        <li><strong>Security Headers:</strong> Present ✅</li>
+      </ul>
+      <div class="text-gray-700 dark:text-gray-300 mt-4">Your scan completed successfully. All systems are secure!</div>
+      <div id="report-preview" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
+        <h3 class="font-semibold">Scan Report Preview</h3>
+        <p><strong>URL:</strong> <span id="report-url"></span></p>
+        <p><strong>Date:</strong> <span id="report-date"></span></p>
       </div>
-      
-      <!-- Results Section -->
-      <div id="results" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 text-left">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">Scan Results</h2>
-          <div class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-medium">
-            Completed Successfully
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div class="card bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-700 dark:to-green-900 p-4 rounded-lg">
-            <div class="flex items-center mb-2">
-              <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div class="text-2xl font-bold" id="passed-tests">0</div>
-            </div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">Passed Tests</div>
-          </div>
-          
-          <div class="card bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-gray-700 dark:to-yellow-900 p-4 rounded-lg">
-            <div class="flex items-center mb-2">
-              <div class="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-white mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div class="text-2xl font-bold" id="warnings">0</div>
-            </div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">Warnings</div>
-          </div>
-          
-          <div class="card bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-700 dark:to-red-900 p-4 rounded-lg">
-            <div class="flex items-center mb-2">
-              <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-              <div class="text-2xl font-bold" id="vulnerabilities">0</div>
-            </div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">Vulnerabilities</div>
-          </div>
-        </div>
-        
-        <div class="mb-6">
-          <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Security Summary</h3>
-          <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
-            <div class="flex items-center justify-between mb-2">
-              <span class="font-medium">Overall Security Score</span>
-              <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400" id="security-score">0/100</span>
-            </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-600 h-2 rounded-full mb-1">
-              <div id="security-bar" class="h-2 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500" style="width: 0%"></div>
-            </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 flex justify-between">
-              <span>Critical</span>
-              <span>Warning</span>
-              <span>Secure</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="mb-6">
-          <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Detailed Findings</h3>
-          <div id="scan-results-list" class="space-y-4"></div>
-        </div>
-        
-        <div class="flex flex-wrap gap-4 justify-between items-center">
-          <div class="flex gap-3">
-            <button id="download-report" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Download Report
-            </button>
-            <button id="share-results" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg font-medium flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-              Share Results
-            </button>
-          </div>
-          <button id="new-scan" class="bg-gray-800 hover:bg-gray-900 dark:bg-gray-600 dark:hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            New Scan
-          </button>
-        </div>
-      </div>
+      <button id="download-report" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg w-full transition duration-300 mt-4">
+        Download Report
+      </button>
+    </section>
+
+    <p id="empty-state" class="text-center text-gray-500 mt-4">Start scanning by entering a website URL above 🔍</p>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg hidden">
+      ✅ Scan completed successfully!
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-8">
-    <div class="container mx-auto px-4">
-      <div class="flex flex-col md:flex-row justify-between items-center">
-        <div class="mb-4 md:mb-0">
-          <div class="flex items-center">
-            <div class="bg-indigo-100 p-2 rounded-full mr-3">
-              <img src="https://placehold.co/32x32" alt="ScanShield small logo" class="h-6 w-6">
-            </div>
-            <span class="text-lg font-bold">ScanShield Pro</span>
-          </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Advanced Web Security Scanner</p>
-        </div>
-        <div class="flex flex-wrap gap-6">
-          <div>
-            <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Product</h3>
-            <ul class="space-y-1">
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">Features</a></li>
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">Pricing</a></li>
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">API</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Resources</h3>
-            <ul class="space-y-1">
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">Documentation</a></li>
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">Guides</a></li>
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">Blog</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Company</h3>
-            <ul class="space-y-1">
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">About</a></li>
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">Privacy</a></li>
-              <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">Terms</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <div class="border-t border-gray-200 dark:border-gray-700 mt-8 pt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-        © 2023 ScanShield Pro. All rights reserved.
-      </div>
-    </div>
-  </footer>
-
   <script>
-    // DOM Elements
-    const urlInput = document.getElementById('target-url');
+    // Auto theme detection
+    if (!localStorage.getItem('theme')) {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+        document.getElementById('theme-toggle').innerText = 'Switch to Light Theme';
+      }
+    }
+
+    // Check for saved theme preference
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+    }
+
     const startButton = document.getElementById('start-scan');
-    const pasteBtn = document.getElementById('paste-btn');
+    const urlInput = document.getElementById('target-url');
     const scanStatus = document.getElementById('scan-status');
     const progressBar = document.getElementById('progress-bar');
     const scanPercentage = document.getElementById('scan-percentage');
     const currentTest = document.getElementById('current-test');
-    const activeTestsList = document.getElementById('active-tests');
     const results = document.getElementById('results');
-    const resultsList = document.getElementById('scan-results-list');
     const errorMessage = document.getElementById('error-message');
-    const passedTestsCount = document.getElementById('passed-tests');
-    const warningsCount = document.getElementById('warnings');
-    const vulnerabilitiesCount = document.getElementById('vulnerabilities');
-    const securityScore = document.getElementById('security-score');
-    const securityBar = document.getElementById('security-bar');
-    const timeElapsed = document.getElementById('time-elapsed');
-    const timeRemaining = document.getElementById('time-remaining');
     const themeToggle = document.getElementById('theme-toggle');
-    const newScanBtn = document.getElementById('new-scan');
-    const downloadReportBtn = document.getElementById('download-report');
-    const shareResultsBtn = document.getElementById('share-results');
-    const scanTypeSelect = document.getElementById('scan-type');
-    const scanDepthSelect = document.getElementById('scan-depth');
-    const reportFormatSelect = document.getElementById('report-format');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const reportPreview = document.getElementById('report-preview');
+    const reportUrl = document.getElementById('report-url');
+    const reportDate = document.getElementById('report-date');
+    const emptyState = document.getElementById('empty-state');
+    const toast = document.getElementById('toast');
 
-    // Sample test data
-    const tests = [
-      'Initializing scanning engine...',
-      'Checking web server headers...',
-      'Scanning for SQL injection vulnerabilities...',
-      'Testing for Cross-Site Scripting (XSS)...',
-      'Examining Cross-Site Request Forgery (CSRF) protection...',
-      'Verifying HTTPS implementation...',
-      'Checking directory listing vulnerabilities...',
-      'Testing for clickjacking vulnerabilities...',
-      'Scanning for outdated software components...',
-      'Checking exposed admin interfaces...',
-      'Testing for insecure file uploads...',
-      'Checking for server-side request forgery (SSRF)...',
-      'Scanning for insecure direct object references (IDOR)...',
-      'Testing authentication mechanisms...',
-      'Checking session management security...',
-      'Scanning for local file inclusion (LFI) vulnerabilities...',
-      'Testing for remote file inclusion (RFI) vulnerabilities...',
-      'Checking CORS configuration...',
-      'Verifying Content Security Policy (CSP)...',
-      'Testing for information disclosure...',
-      'Finalizing report generation...'
-    ];
+    // Show empty state on page load
+    emptyState.classList.remove('hidden');
 
-    const vulnerabilities = [
-      { id: 'xss-001', name: 'DOM XSS Vulnerability', severity: 'high', description: 'Unsanitized user input reflected in DOM could allow execution of malicious JavaScript code.', solution: 'Sanitize all user input and implement proper output encoding.' },
-      { id: 'csrf-001', name: 'Missing CSRF Tokens', severity: 'medium', description: 'Forms are missing CSRF protection tokens, making them vulnerable to Cross-Site Request Forgery attacks.', solution: 'Implement CSRF tokens for all state-changing requests.' },
-      { id: 'ssl-001', name: 'Weak SSL/TLS Configuration', severity: 'medium', description: 'Server supports outdated SSL/TLS protocols (TLS 1.0) which have known vulnerabilities.', solution: 'Disable TLS 1.0 and configure server to use TLS 1.2 or higher.' },
-      { id: 'info-001', name: 'Information Disclosure', severity: 'low', description: 'Server reveals software version information in HTTP headers.', solution: 'Configure server to suppress version information in HTTP headers.' },
-      { id: 'auth-001', name: 'Weak Password Policy', severity: 'medium', description: 'Application allows weak passwords (minimum 6 characters, no complexity requirements).', solution: 'Implement password policy requiring minimum 12 characters with complexity.' }
-    ];
-
-    const warnings = [
-      'No secure flag set on session cookies',
-      'Missing X-Content-Type-Options header',
-      'Missing X-XSS-Protection header',
-      'Subresource integrity (SRI) missing for external scripts',
-      'Mixed content warnings detected'
-    ];
-
-    // Theme toggle
-    themeToggle.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-      updateThemeIcon();
-    });
-
-    function updateThemeIcon() {
-      const isDark = document.documentElement.classList.contains('dark');
-      themeToggle.innerHTML = isDark ? '☀' : '🌙';
-    }
-
-    // Check for saved theme preference
-    if (localStorage.getItem('theme') === 'dark' || 
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    }
-    updateThemeIcon();
-
-    // Paste button functionality
-    pasteBtn.addEventListener('click', async () => {
+    // Function to validate URL
+    function validateURL(url) {
       try {
-        const text = await navigator.clipboard.readText();
-        urlInput.value = text;
-        validateUrl();
-      } catch (err) {
-        errorMessage.textContent = 'Failed to read from clipboard. Please paste manually.';
-        errorMessage.classList.remove('hidden');
-      }
-    });
-
-    // URL validation
-    function validateUrl() {
-      const url = urlInput.value.trim();
-      const isValid = url.match(/^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/.*)?$/i);
-      
-      if (!url || !isValid) {
-        errorMessage.textContent = 'Please enter a valid URL (e.g., https://example.com)';
-        errorMessage.classList.remove('hidden');
-        return false;
-      } else {
-        errorMessage.classList.add('hidden');
+        new URL(url);
         return true;
+      } catch (_) {
+        return false;
       }
     }
 
-    urlInput.addEventListener('input', validateUrl);
-    urlInput.addEventListener('blur', validateUrl);
-
-    // Start scan function
+    // Event listener for the Scan button
     startButton.addEventListener('click', () => {
-      if (!validateUrl()) return;
+      const url = urlInput.value.trim();
+      errorMessage.classList.add('hidden'); // Hide error message initially
+      loadingSpinner.classList.remove('hidden'); // Show spinner
+      emptyState.classList.add('hidden'); // Hide empty state
 
-      // Get scan options
-      const scanType = scanTypeSelect.value;
-      const scanDepth = scanDepthSelect.value;
-      const reportFormat = reportFormatSelect.value;
-      const targetUrl = urlInput.value.startsWith('http') ? 
-                        urlInput.value : https://${urlInput.value};
+      // Validate URL input
+      if (!url) {
+        errorMessage.innerText = 'URL cannot be empty.';
+        errorMessage.classList.remove('hidden');
+        loadingSpinner.classList.add('hidden'); // Hide spinner
+        return;
+      } else if (!validateURL(url)) {
+        errorMessage.innerText = 'Please enter a valid URL (e.g., https://example.com).';
+        errorMessage.classList.remove('hidden');
+        urlInput.classList.add('border-red-500'); // Highlight invalid input
+        loadingSpinner.classList.add('hidden'); // Hide spinner
+        return;
+      } else {
+        urlInput.classList.remove('border-red-500'); // Remove highlight if valid
+      }
 
-      // Start scan process
+      // Disable button while scanning
       startButton.disabled = true;
-      startButton.textContent = 'Scanning...';
+      startButton.classList.add('opacity-50', 'cursor-not-allowed');
+
       scanStatus.classList.remove('hidden');
       results.classList.add('hidden');
-      
-      // Reset results
-      resultsList.innerHTML = '';
-      passedTestsCount.textContent = '0';
-      warningsCount.textContent = '0';
-      vulnerabilitiesCount.textContent = '0';
-      securityScore.textContent = '0/100';
-      securityBar.style.width = '0%';
+      reportPreview.classList.add('hidden'); // Hide report preview initially
+      reportUrl.innerText = url; // Set report URL
+      reportDate.innerText = new Date().toLocaleString(); // Set report date
 
-      // Simulate scan progress
-      simulateScan(targetUrl, scanType, scanDepth);
-    });
-
-    // Simulate scan progress
-    function simulateScan(targetUrl, scanType, scanDepth) {
       let progress = 0;
-      let elapsedSeconds = 0;
-      const totalDuration = scanType === 'quick' ? 15 : (scanType === 'full' ? 30 : 45);
-      let remainingSeconds = totalDuration;
-      
-      // Update time every second
-      const timerInterval = setInterval(() => {
-        elapsedSeconds++;
-        remainingSeconds = Math.max(0, totalDuration - elapsedSeconds);
-        
-        const elapsedMins = Math.floor(elapsedSeconds / 60);
-        const elapsedSecs = elapsedSeconds % 60;
-        const remainingMins = Math.floor(remainingSeconds / 60);
-        const remainingSecs = remainingSeconds % 60;
-        
-        timeElapsed.textContent = ${String(elapsedMins).padStart(2, '0')}:${String(elapsedSecs).padStart(2, '0')};
-        timeRemaining.textContent = ${String(remainingMins).padStart(2, '0')}:${String(remainingSecs).padStart(2, '0')};
-      }, 1000);
+      const steps = [
+        { message: 'Analyzing SSL certificate...', delay: 1000 },
+        { message: 'Checking for SQL Injection...', delay: 1200 },
+        { message: 'Testing Cross-Site Scripting (XSS)...', delay: 1000 },
+        { message: 'Scanning headers...', delay: 1200 },
+        { message: 'Verifying security headers...', delay: 1000 },
+      ];
 
-      // Update progress
-      const progressInterval = setInterval(() => {
-        progress += Math.random() * 5;
-        if (progress > 100) progress = 100;
-        
-        progressBar.style.width = progress + '%';
-        scanPercentage.textContent = Math.floor(progress) + '%';
-        
-        // Update current test
-        const testIndex = Math.min(Math.floor(progress / (100 / tests.length)), tests.length - 1);
-        currentTest.textContent = tests[testIndex];
-        
-        // Update active tests list
-        activeTestsList.innerHTML = '';
-        const testsToShow = Math.min(testIndex + 1, tests.length);
-        
-        for (let i = 0; i < testsToShow; i++) {
-          const testEl = document.createElement('div');
-          testEl.className = 'flex items-center';
-          
-          const dotEl = document.createElement('div');
-          dotEl.className = w-3 h-3 rounded-full mr-3 ${i < testIndex ? 'bg-green-500' : 'bg-indigo-500 animate-pulse'};
-          
-          const textEl = document.createElement('span');
-          textEl.className = 'text-sm text-gray-700 dark:text-gray-300';
-          textEl.textContent = tests[i];
-          
-          testEl.appendChild(dotEl);
-          testEl.appendChild(textEl);
-          activeTestsList.appendChild(testEl);
-        }
-        
-        // Complete scan when progress reaches 100%
-        if (progress >= 100) {
-          clearInterval(progressInterval);
-          clearInterval(timerInterval);
-          completeScan(targetUrl, scanType, scanDepth);
-        }
-      }, 300);
-    }
+      let currentStep = 0;
 
-    // Complete scan
-    function completeScan(targetUrl, scanType, scanDepth) {
-      setTimeout(() => {
-        scanStatus.classList.add('hidden');
-        results.classList.remove('hidden');
-        startButton.disabled = false;
-        startButton.textContent = 'Start Scan';
-        
-        // Update results counters
-        passedTestsCount.textContent = (tests.length - vulnerabilities.length - warnings.length).toString();
-        warningsCount.textContent = warnings.length.toString();
-        vulnerabilitiesCount.textContent = vulnerabilities.length.toString();
-        
-        // Calculate security score (80 - (critical*20) - (high*15) - (medium*10) - (low*5))
-        let scoreSubtraction = 0;
-        vulnerabilities.forEach(vuln => {
-          if (vuln.severity === 'high') scoreSubtraction += 15;
-          else if (vuln.severity === 'medium') scoreSubtraction += 10;
-          else scoreSubtraction += 5;
-        });
-        warnings.forEach(() => scoreSubtraction += 2);
-        
-        const calculatedScore = Math.max(0, 100 - scoreSubtraction);
-        securityScore.textContent = ${calculatedScore}/100;
-        securityBar.style.width = ${calculatedScore}%;
-        
-        // Add vulnerabilities to results list
-        vulnerabilities.forEach(vuln => {
-          const vulnEl = document.createElement('div');
-          vulnEl.className = 'bg-gray-50 dark:bg-gray-700 rounded-lg p-4';
-          
-          const titleEl = document.createElement('div');
-          titleEl.className = 'flex justify-between items-center mb-2';
-          
-          const titleTextEl = document.createElement('h4');
-          titleTextEl.className = 'font-medium flex items-center';
-          
-          const severityEl = document.createElement('span');
-          severityEl.className = inline-block px-2 py-1 rounded-full text-xs font-semibold text-white mr-2 severity-${vuln.severity};
-          severityEl.textContent = vuln.severity.charAt(0).toUpperCase() + vuln.severity.slice(1);
-          
-          titleTextEl.appendChild(severityEl);
-          titleTextEl.appendChild(document.createTextNode(vuln.name));
-          
-          titleEl.appendChild(titleTextEl);
-          
-          vulnEl.appendChild(titleEl);
-          
-          const descEl = document.createElement('p');
-          descEl.className = 'text-gray-700 dark:text-gray-300 mb-2';
-          descEl.textContent = vuln.description;
-          vulnEl.appendChild(descEl);
-          
-          const solTitleEl = document.createElement('h5');
-          solTitleEl.className = 'font-medium text-sm mb-1';
-          solTitleEl.textContent = 'Recommended Solution:';
-          vulnEl.appendChild(solTitleEl);
-          
-          const solEl = document.createElement('p');
-          solEl.className = 'text-sm bg-gray-100 dark:bg-gray-600 p-2 rounded';
-          solEl.textContent = vuln.solution;
-          vulnEl.appendChild(solEl);
-          
-          resultsList.appendChild(vulnEl);
-        });
-        
-        // Add warnings to results list
-        if (warnings.length > 0) {
-          const warningsEl = document.createElement('div');
-          warningsEl.className = 'bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mt-4';
-          
-          const titleEl = document.createElement('h3');
-          titleEl.className = 'font-medium mb-2';
-          titleEl.textContent = 'Security Recommendations';
-          warningsEl.appendChild(titleEl);
-          
-          const listEl = document.createElement('ul');
-          listEl.className = 'list-disc pl-5 space-y-1';
-          
-          warnings.forEach(warning => {
-            const itemEl = document.createElement('li');
-            itemEl.textContent = warning;
-            listEl.appendChild(itemEl);
-          });
-          
-          warningsEl.appendChild(listEl);
-          resultsList.appendChild(warningsEl);
-        }
-        
-        // Add passed tests to results list
-        const passedEl = document.createElement('div');
-        passedEl.className = 'bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mt-4';
-        
-        const passedTitleEl = document.createElement('h3');
-        passedTitleEl.className = 'font-medium mb-2';
-        passedTitleEl.textContent = 'Tests Passed Successfully';
-        passedEl.appendChild(passedTitleEl);
-        
-        const passedTextEl = document.createElement('p');
-        passedTextEl.className = 'text-gray-700 dark:text-gray-300';
-        passedTextEl.textContent = ${tests.length - vulnerabilities.length - warnings.length} security checks passed successfully.;
-        passedEl.appendChild(passedTextEl);
-        
-        resultsList.appendChild(passedEl);
-      }, 1000);
-    }
+      const interval = setInterval(() => {
+        if (currentStep < steps.length) {
+          currentTest.innerText = steps[currentStep].message;
+          progressBar.style.width = ${((currentStep + 1) / steps.length) * 100}%;
+          scanPercentage.innerText = ${Math.round(((currentStep + 1) / steps.length) * 100)}%;
+          currentStep++;
+        } else {
+          clearInterval(interval);
+          setTimeout(() => {
+            scanStatus.classList.add('hidden');
+            loadingSpinner.classList.add('hidden'); // Hide spinner
+            results.classList.remove('hidden');
+            reportPreview.classList.remove('hidden'); // Show report preview
+            results.classList.add('show'); // Show results with fade-in
 
-    // New scan button
-    newScanBtn.addEventListener('click', () => {
-      urlInput.value = '';
-      scanStatus.classList.add('hidden');
-      results.classList.add('hidden');
-      startButton.disabled = false;
-      startButton.textContent = 'Start Scan';
+            // Show toast notification
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000); // Hide after 3 seconds
+
+            // Enable button after scan is done
+            startButton.disabled = false;
+            startButton.classList.remove('opacity-50', 'cursor-not-allowed');
+          }, 500); // Delay before showing results
+        }
+      }, steps[currentStep].delay);
     });
 
-    // Download report button
-    downloadReportBtn.addEventListener('click', () => {
-      alert(Downloading report in ${reportFormatSelect.value.toUpperCase()} format...);
-    });
+    // Function to download the report
+    function downloadReport() {
+      const content = "Website: " + urlInput.value + "\nResult: No critical issues.\nDate: " + new Date().toLocaleString();
+      const blob = new Blob([content], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'scan-report.txt';
+      link.click();
+    }
 
-    // Share results button
-    shareResultsBtn.addEventListener('click', () => {
-      if (navigator.share) {
-        navigator.share({
-          title: 'ScanShield Security Report',
-          text: 'Check out my website security scan results from ScanShield Pro',
-          url: window.location.href
-        }).catch(err => {
-          console.log('Error sharing:', err);
-          fallbackShare();
-        });
+    // Event listener for the Download Report button
+    document.getElementById('download-report').addEventListener('click', downloadReport);
+
+    // Event listener for input changes to validate URL in real-time
+    urlInput.addEventListener('input', () => {
+      const url = urlInput.value.trim();
+      if (url && !validateURL(url)) {
+        errorMessage.innerText = 'Please enter a valid URL (e.g., https://example.com).';
+        errorMessage.classList.remove('hidden');
+        urlInput.classList.add('border-red-500'); // Highlight invalid input
       } else {
-        fallbackShare();
+        errorMessage.classList.add('hidden'); // Hide error message if valid
+        urlInput.classList.remove('border-red-500'); // Remove highlight if valid
       }
     });
 
-    function fallbackShare() {
-      alert('Scan report URL copied to clipboard. You can share this with others.');
-      // In a real app, you would copy to clipboard here
-    }
+    // Theme toggle functionality
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+      themeToggle.innerText = document.body.classList.contains('dark') ? 'Switch to Light Theme' : 'Switch to Dark Theme';
+    });
   </script>
+
 </body>
 </html>
