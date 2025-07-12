@@ -21,6 +21,31 @@
       animation: spin 1s linear infinite;
       margin: 0 auto;
     }
+    .watch-timer {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #4f46e5;
+      border-radius: 50%;
+      position: relative;
+      display: inline-block;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .watch-timer:after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 2px;
+      background: #4f46e5;
+      transform-origin: left center;
+      animation: rotateHour 8s linear infinite;
+    }
+    @keyframes rotateHour {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -30,7 +55,11 @@
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
 
   <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-    <h1 class="text-3xl font-bold mb-4 text-center text-indigo-600">Website Vulnerability Scanner</h1>
+    <div class="text-center mb-4">
+      <div class="text-4xl font-bold text-indigo-700">🌐 ScanShield</div>
+      <div class="text-xs text-gray-500 mt-2">Advanced Web Protection</div>
+    </div>
+    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-600">Website Vulnerability Scanner</h1>
     <h2 class="text-xl font-semibold mb-4 text-center text-gray-700">🔍 Scan your website for vulnerabilities</h2>
 
     <input id="target-url" type="url" placeholder="https://example.com" class="border p-2 rounded w-full mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Target URL">
@@ -45,7 +74,10 @@
       <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
         <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
       </div>
-      <div id="current-test" class="text-sm text-gray-700">Starting scan...</div>
+      <div id="current-test" class="text-sm text-gray-700 flex items-center">
+        <div class="watch-timer"></div>
+        <span>Starting scan...</span>
+      </div>
       <div id="loading-spinner" class="spinner hidden"></div>
     </div>
 
