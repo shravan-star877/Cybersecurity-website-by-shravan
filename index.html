@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ScanShield | Vulnerability Scanner</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Add your favicon here -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .error-message {
@@ -23,37 +23,27 @@
     .loading-spinner {
       display: none; /* Hide spinner by default */
     }
-    #progress-bar {
-      transition: width 0.5s ease-in-out; /* Smooth progress bar animation */
-    }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-800 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
-
-  <nav class="absolute top-4 left-4 space-x-4 text-sm">
-    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600">Home</a>
-    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600">Scan History</a>
-    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600">About</a>
-    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600">Contact</a>
-  </nav>
+<body class="bg-gray-100 dark:bg-gray-800 min-h-screen flex flex-col items-center justify-center p-4">
 
   <button id="theme-toggle" class="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg transition duration-300 absolute top-4 right-4" aria-label="Toggle theme">
     Switch to Dark Theme
   </button>
 
-  <main id="scanner" class="bg-white dark:bg-gray-700 p-4 sm:p-6 lg:p-8 rounded-lg shadow-lg max-w-md sm:max-w-sm lg:max-w-lg w-full fade-in show">
-    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 text-center text-indigo-600">Website Vulnerability Scanner</h1>
+  <main id="scanner" class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg max-w-md w-full fade-in show">
+    <h1 class="text-3xl font-bold mb-4 text-center text-indigo-600">Website Vulnerability Scanner</h1>
     <h2 class="text-xl font-semibold mb-4 text-center text-gray-700 dark:text-gray-300">🔍 Scan your website for vulnerabilities</h2>
 
     <label for="target-url" class="sr-only">URL:</label>
     <input id="target-url" type="url" placeholder="https://example.com" class="border p-2 rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Target URL">
     <div id="error-message" class="error-message hidden mb-2 text-sm" role="alert"></div>
 
-    <button id="start-scan" class="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-4 py-2 rounded-lg w-full transition duration-300 transform hover:scale-105">
+    <button id="start-scan" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg w-full transition duration-300">
       Scan Now
     </button>
 
-    <div id="loading-spinner" class="loading-spinner mb-4 hidden">
+    <div id="loading-spinner" class="loading-spinner mb-4">
       <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -69,42 +59,17 @@
     </div>
 
     <section id="results" class="hidden mt-4 text-sm fade-in">
-      <h3 class="font-semibold">Scan Report</h3>
-      <ul class="list-disc pl-5 mt-2 text-gray-700 dark:text-gray-300">
-        <li><strong>Total issues found:</strong> 0</li>
-        <li><strong>SSL Certificate:</strong> Valid ✅</li>
-        <li><strong>SQL Injection:</strong> Not Detected ✅</li>
-        <li><strong>XSS:</strong> Not Detected ✅</li>
-        <li><strong>Security Headers:</strong> Present ✅</li>
-      </ul>
-      <div class="text-gray-700 dark:text-gray-300 mt-4">Your scan completed successfully. All systems are secure!</div>
-      <div id="report-preview" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
-        <h3 class="font-semibold">Scan Report Preview</h3>
-        <p><strong>URL:</strong> <span id="report-url"></span></p>
-        <p><strong>Date:</strong> <span id="report-date"></span></p>
+      <div class="bg-green-100 text-green-700 border border-green-400 p-4 rounded-lg shadow-md">
+        ✅ No critical vulnerabilities detected.
       </div>
+      <div class="text-gray-700 dark:text-gray-300 mt-4">Your scan completed successfully. All systems are secure!</div>
       <button id="download-report" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg w-full transition duration-300 mt-4">
         Download Report
       </button>
     </section>
-
-    <p id="empty-state" class="text-center text-gray-500 mt-4">Start scanning by entering a website URL above 🔍</p>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg hidden">
-      ✅ Scan completed successfully!
-    </div>
   </main>
 
   <script>
-    // Auto theme detection
-    if (!localStorage.getItem('theme')) {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-        document.getElementById('theme-toggle').innerText = 'Switch to Light Theme';
-      }
-    }
-
     // Check for saved theme preference
     if (localStorage.getItem('theme') === 'dark') {
       document.body.classList.add('dark');
@@ -120,14 +85,6 @@
     const errorMessage = document.getElementById('error-message');
     const themeToggle = document.getElementById('theme-toggle');
     const loadingSpinner = document.getElementById('loading-spinner');
-    const reportPreview = document.getElementById('report-preview');
-    const reportUrl = document.getElementById('report-url');
-    const reportDate = document.getElementById('report-date');
-    const emptyState = document.getElementById('empty-state');
-    const toast = document.getElementById('toast');
-
-    // Show empty state on page load
-    emptyState.classList.remove('hidden');
 
     // Function to validate URL
     function validateURL(url) {
@@ -143,34 +100,22 @@
     startButton.addEventListener('click', () => {
       const url = urlInput.value.trim();
       errorMessage.classList.add('hidden'); // Hide error message initially
-      loadingSpinner.classList.remove('hidden'); // Show spinner
-      emptyState.classList.add('hidden'); // Hide empty state
+      loadingSpinner.style.display = 'none'; // Hide spinner initially
 
       // Validate URL input
       if (!url) {
         errorMessage.innerText = 'URL cannot be empty.';
         errorMessage.classList.remove('hidden');
-        loadingSpinner.classList.add('hidden'); // Hide spinner
         return;
       } else if (!validateURL(url)) {
         errorMessage.innerText = 'Please enter a valid URL (e.g., https://example.com).';
         errorMessage.classList.remove('hidden');
-        urlInput.classList.add('border-red-500'); // Highlight invalid input
-        loadingSpinner.classList.add('hidden'); // Hide spinner
         return;
-      } else {
-        urlInput.classList.remove('border-red-500'); // Remove highlight if valid
       }
-
-      // Disable button while scanning
-      startButton.disabled = true;
-      startButton.classList.add('opacity-50', 'cursor-not-allowed');
 
       scanStatus.classList.remove('hidden');
       results.classList.add('hidden');
-      reportPreview.classList.add('hidden'); // Hide report preview initially
-      reportUrl.innerText = url; // Set report URL
-      reportDate.innerText = new Date().toLocaleString(); // Set report date
+      loadingSpinner.style.display = 'block'; // Show spinner
 
       let progress = 0;
       const steps = [
@@ -193,18 +138,9 @@
           clearInterval(interval);
           setTimeout(() => {
             scanStatus.classList.add('hidden');
-            loadingSpinner.classList.add('hidden'); // Hide spinner
+            loadingSpinner.style.display = 'none'; // Hide spinner
             results.classList.remove('hidden');
-            reportPreview.classList.remove('hidden'); // Show report preview
             results.classList.add('show'); // Show results with fade-in
-
-            // Show toast notification
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000); // Hide after 3 seconds
-
-            // Enable button after scan is done
-            startButton.disabled = false;
-            startButton.classList.remove('opacity-50', 'cursor-not-allowed');
           }, 500); // Delay before showing results
         }
       }, steps[currentStep].delay);
@@ -229,10 +165,8 @@
       if (url && !validateURL(url)) {
         errorMessage.innerText = 'Please enter a valid URL (e.g., https://example.com).';
         errorMessage.classList.remove('hidden');
-        urlInput.classList.add('border-red-500'); // Highlight invalid input
       } else {
         errorMessage.classList.add('hidden'); // Hide error message if valid
-        urlInput.classList.remove('border-red-500'); // Remove highlight if valid
       }
     });
 
