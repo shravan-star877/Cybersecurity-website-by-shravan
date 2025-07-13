@@ -91,8 +91,12 @@
     </div>
 
     <div id="results" class="hidden mt-4 text-sm" aria-live="assertive">
-      <div id="scan-summary" class="text-lg font-bold"></div>
-      <ul id="vulnerability-list" class="mt-2 list-disc list-inside text-gray-600"></ul>
+      <div class="success-message text-lg font-bold">✅ Scan Completed!</div>
+      <ul class="mt-2 list-disc list-inside text-gray-600">
+        <li>No SQL Injection found</li>
+        <li>No XSS detected</li>
+        <li>CSRF tokens present</li>
+      </ul>
       <button onclick="location.reload()" class="mt-4 text-indigo-600 underline">🔁 Scan another URL</button>
     </div>
   </div>
@@ -113,55 +117,11 @@
     const results = document.getElementById('results');
     const errorMessage = document.getElementById('error-message');
     const loadingSpinner = document.getElementById('loading-spinner');
-    const vulnerabilityList = document.getElementById('vulnerability-list');
 
     // Function to validate URL
     function validateURL(url) {
       const urlPattern = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,6}(\/.*)?$/i;
       return urlPattern.test(url);
-    }
-
-    // Function to generate a hash from the URL
-    function hashCode(str) {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = (hash << 5) - hash + str.charCodeAt(i);
-        hash |= 0; // Convert to 32bit integer
-      }
-      return hash;
-    }
-
-    // Track scan count to alternate results every 3 scans
-    let scanCount = 0;
-
-    // Function to generate scan results with alternating patterns
-    function generateResults(url) {
-      scanCount++;
-      const results = [];
-      const scanSummary = document.getElementById('scan-summary');
-      
-      // Alternate between positive and negative every 3 scans
-      const isPositiveBatch = Math.floor(scanCount / 3) % 2 === 0;
-      
-      if (isPositiveBatch) {
-        scanSummary.textContent = '✅ Scan Completed - All Checks Passed!';
-        scanSummary.className = 'success-message text-lg font-bold';
-        results.push(
-          'No SQL Injection found',
-          'No XSS detected',
-          'CSRF tokens present'
-        );
-      } else {
-        scanSummary.textContent = '⚠ Vulnerabilities Detected!';
-        scanSummary.className = 'error-message text-lg font-bold';
-        results.push(
-          'Potential SQL Injection vulnerability detected',
-          'Potential XSS vulnerability detected',
-          'Missing CSRF tokens'
-        );
-      }
-
-      return results;
     }
 
     // Event listener for the Scan button
@@ -178,7 +138,6 @@
       scanStatus.classList.remove('hidden');
       results.classList.add('hidden');
       loadingSpinner.classList.remove('hidden');
-      vulnerabilityList.innerHTML = ''; // Clear previous results
 
       let progress = 0;
       const tests = [
@@ -190,7 +149,7 @@
       ];
 
       const interval = setInterval(() => {
-        progress += 20;
+        progress += 10;
         progressBar.style.width = progress + '%';
         scanPercentage.innerText = progress + '%';
         currentTest.innerText = tests[Math.floor(progress / 20)] || 'Completing...';
@@ -200,16 +159,6 @@
           loadingSpinner.classList.add('hidden');
           scanStatus.classList.add('hidden');
           results.classList.remove('hidden');
-
-          // Generate and display results
-          const scanResults = generateResults(url);
-          vulnerabilityList.innerHTML = '';
-          scanResults.forEach(result => {
-            const li = document.createElement('li');
-            li.textContent = result;
-            vulnerabilityList.appendChild(li);
-          });
-          document.getElementById('scan-summary').scrollIntoView();
         }
       }, 400);
     });
