@@ -12,16 +12,16 @@
   </script>
   <style>
     .error-message {
-      color: #e53e3e; /* Red color for error messages */
+      color: #e53e3e;
     }
     .success-message {
-      color: #38a169; /* Green color for success messages */
+      color: #38a169;
     }
     .warning-message {
-      color: #dd6b20; /* Orange color for warning messages */
+      color: #dd6b20;
     }
     .danger-message {
-      color: #e53e3e; /* Red color for danger messages */
+      color: #e53e3e;
     }
     .spinner {
       border: 4px solid rgba(255, 255, 255, 0.3);
@@ -67,15 +67,14 @@
       transition: all 0.3s ease;
       z-index: 1000;
     }
-    .toast.danger {
-      background-color: #e53e3e;
-    }
-    .toast.warning {
-      background-color: #dd6b20;
-    }
     .toast.show {
       transform: translateY(0);
       opacity: 1;
+    }
+    .vulnerability-item {
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      margin-bottom: 0.25rem;
     }
     @keyframes rotateHour {
       0% { transform: translate(-50%, -50%) rotate(0deg); }
@@ -109,11 +108,11 @@
     </button>
 
     <div id="scan-status" class="hidden mt-4" aria-live="polite">
-      <div class="mb-2 text-sm text-gray-600">Scan Progress: <span id="scan-percentage">0%</span></div>
+      <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">Scan Progress: <span id="scan-percentage">0%</span></div>
       <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
         <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
       </div>
-      <div id="current-test" class="text-sm text-gray-700 flex items-center">
+      <div id="current-test" class="text-sm text-gray-700 dark:text-gray-300 flex items-center">
         <div class="watch-timer"></div>
         <span>Starting scan...</span>
       </div>
@@ -121,17 +120,10 @@
     </div>
 
     <div id="results" class="hidden mt-4 text-sm" aria-live="assertive">
-      <div id="result-title" class="text-lg font-bold success-message">✅ Scan Completed!</div>
-      <ul id="result-list" class="mt-2 list-disc list-inside text-gray-600">
-        <li>No SQL Injection found</li>
-        <li>No XSS detected</li>
-        <li>CSRF tokens present</li>
-      </ul>
+      <div id="scan-summary" class="text-lg font-bold"></div>
+      <div id="vulnerabilities-list" class="mt-2 space-y-2"></div>
       <button onclick="location.reload()" class="mt-4 text-indigo-600 underline">🔁 Scan another URL</button>
     </div>
-
-    <div id="scan-counter" class="hidden">0</div>
-    <div id="scanned-urls" class="hidden"></div>
   </div>
 
   <div class="mt-8 text-center text-gray-500 text-sm">
@@ -156,25 +148,25 @@
     const scanPercentage = document.getElementById('scan-percentage');
     const currentTest = document.getElementById('current-test');
     const results = document.getElementById('results');
-    const resultTitle = document.getElementById('result-title');
-    const resultList = document.getElementById('result-list');
     const errorMessage = document.getElementById('error-message');
     const loadingSpinner = document.getElementById('loading-spinner');
     const toast = document.getElementById('toast');
-    const scanCounter = document.getElementById('scan-counter');
+    const scanSummary = document.getElementById('scan-summary');
+    const vulnerabilitiesList = document.getElementById('vulnerabilities-list');
 
-    function showToast(type = 'success', message = 'Scan completed successfully!') {
+    // Track scan count
+    let scanCount = 0;
+
+    function showToast(message, type = 'success') {
       toast.textContent = message;
-      toast.className = 'toast';
-      
-      if (type === 'danger') {
-        toast.classList.add('danger');
+      toast.className = 'toast'; // Reset classes
+      if (type === 'success') {
+        toast.style.backgroundColor = '#38a169';
       } else if (type === 'warning') {
-        toast.classList.add('warning');
+        toast.style.backgroundColor = '#dd6b20';
       } else {
-        toast.classList.add('success');
+        toast.style.backgroundColor = '#e53e3e';
       }
-      
       toast.classList.add('show');
       setTimeout(() => {
         toast.classList.remove('show');
@@ -186,62 +178,82 @@
       return urlPattern.test(url);
     }
 
-    function getScanResult() {
-      const url = urlInput.value.trim();
-      const scannedUrls = document.getElementById('scanned-urls');
-      
-      // Track unique URLs
-      const urlList = scannedUrls.textContent.split(',');
-      if (!urlList.includes(url)) {
-        urlList.push(url);
-        scannedUrls.textContent = urlList.filter(u => u).join(',');
-      }
-      
-      // Show negative only on every 4th unique URL
-      const shouldShowNegative = (urlList.length % 4 === 0);
-      
-      if (shouldShowNegative) {
-        return {
-          isPositive: false,
-          title: "⚠ Vulnerabilities Detected!",
-          titleClass: "danger-message",
-          items: [
-            "Potential SQL Injection vulnerability detected",
-            "Possible XSS vulnerability found",
-            "Missing CSRF protection"
-          ],
-          toastType: "danger",
-          toastMessage: Critical vulnerabilities found at ${urlInput.value.trim()}! Immediate action recommended.
-        };
+    function getRandomVulnerabilityDetails(isVulnerable) {
+      const vulnerabilities = [
+        { name: 'SQL Injection', severity: 'High' },
+        { name: 'Cross-Site Scripting (XSS)', severity: 'High' },
+        { name: 'Cross-Site Request Forgery (CSRF)', severity: 'Medium' },
+        { name: 'Server-Side Request Forgery (SSRF)', severity: 'High' },
+        { name: 'Remote Code Execution', severity: 'Critical' },
+        { name: 'Directory Traversal', severity: 'Medium' },
+        { name: 'Insecure Deserialization', severity: 'High' },
+        { name: 'Broken Authentication', severity: 'High' },
+      ];
+
+      const foundVulns = [];
+      if (isVulnerable) {
+        // Randomly select 2-4 vulnerabilities
+        const numVulns = Math.floor(Math.random() * 3) + 2;
+        for (let i = 0; i < numVulns; i++) {
+          const randomIndex = Math.floor(Math.random() * vulnerabilities.length);
+          foundVulns.push({
+            ...vulnerabilities[randomIndex],
+            status: 'VULNERABLE',
+            description: Potential ${vulnerabilities[randomIndex].name} vulnerability found in form submissions or URL parameters.
+          });
+        }
       } else {
-        return {
-          isPositive: true,
-          title: "✅ Scan Completed!",
-          titleClass: "success-message",
-          items: [
-            "No SQL Injection found",
-            "No XSS detected",
-            "CSRF tokens present"
-          ],
-          toastType: "success",
-          toastMessage: Scan of ${urlInput.value.trim()} completed successfully!
-        };
+        // Just mark all as secure
+        vulnerabilities.forEach(vuln => {
+          foundVulns.push({
+            ...vuln,
+            status: 'SECURE',
+            description: No ${vuln.name} vulnerabilities detected.
+          });
+        });
       }
+
+      return foundVulns;
     }
 
-    function displayResults(result) {
-      resultTitle.textContent = ${result.title} - ${urlInput.value.trim()};
-      resultTitle.className = text-lg font-bold ${result.titleClass};
-      
-      resultList.innerHTML = '';
-      result.items.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        resultList.appendChild(li);
-      });
-      
+    function displayResults(isVulnerable) {
+      scanStatus.classList.add('hidden');
       results.classList.remove('hidden');
-      showToast(result.toastType, result.toastMessage);
+      
+      const vulnerabilities = getRandomVulnerabilityDetails(isVulnerable);
+      vulnerabilitiesList.innerHTML = '';
+
+      if (isVulnerable) {
+        scanSummary.className = 'danger-message';
+        scanSummary.textContent = 'Critical Vulnerabilities Found!';
+        showToast('Scan completed - critical vulnerabilities detected!', 'danger');
+      } else {
+        scanSummary.className = 'success-message';
+        scanSummary.textContent = '✅ Scan Completed - No Critical Vulnerabilities Found!';
+        showToast('Scan completed - no critical vulnerabilities detected!');
+      }
+
+      vulnerabilities.forEach(vuln => {
+        const item = document.createElement('div');
+        item.className = 'vulnerability-item ' + 
+                         (vuln.status === 'VULNERABLE' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-green-50 dark:bg-green-900/20');
+        
+        const statusClass = vuln.status === 'VULNERABLE' ? 'danger-message' : 'success-message';
+        
+        item.innerHTML = `
+          <div class="font-semibold flex items-center">
+            <span class="${statusClass}">${vuln.status}</span>:
+            <span class="ml-1">${vuln.name}</span>
+            <span class="ml-auto px-2 py-1 text-xs rounded ${vuln.severity === 'Critical' ? 'bg-red-500 text-white' : 
+                                                             vuln.severity === 'High' ? 'bg-orange-500 text-white' : 
+                                                             'bg-yellow-500 text-black'}">
+              ${vuln.severity}
+            </span>
+          </div>
+          <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">${vuln.description}</div>
+        `;
+        vulnerabilitiesList.appendChild(item);
+      });
     }
 
     startButton.addEventListener('click', () => {
@@ -249,7 +261,7 @@
       errorMessage.classList.add('hidden');
 
       if (!url || !validateURL(url)) {
-        errorMessage.innerText = 'Please enter a valid and complete URL.';
+        errorMessage.innerText = 'Please enter a valid and complete URL (e.g., https://example.com)';
         errorMessage.classList.remove('hidden');
         return;
       }
@@ -258,28 +270,39 @@
       results.classList.add('hidden');
       loadingSpinner.classList.remove('hidden');
 
+      // Increment scan count and determine if this should be a negative scan
+      scanCount++;
+      const isVulnerable = (scanCount % 4 === 0); // Every 4th scan will show vulnerabilities
+
       let progress = 0;
       const tests = [
-        'Checking for SQL Injection...',
-        'Checking for XSS...',
-        'Checking for CSRF protection...',
-        'Scanning site map...',
+        'Checking headers security...',
+        'Scanning for SQL Injection...',
+        'Analyzing form inputs...',
+        'Testing for XSS vulnerabilities...',
+        'Verifying authentication mechanisms...',
+        'Checking CSRF protections...',
+        'Scanning JavaScript files...',
+        'Analyzing server responses...',
         'Finalizing results...'
       ];
 
       const interval = setInterval(() => {
-        progress += 10;
+        progress += Math.floor(Math.random() * 10) + 3; // Random progress increment 3-12%
+        if (progress > 100) progress = 100;
+        
         progressBar.style.width = progress + '%';
         scanPercentage.innerText = progress + '%';
-        currentTest.innerText = tests[Math.floor(progress / 20)] || 'Completing...';
+        
+        const testIndex = Math.floor(progress / (100 / (tests.length - 1)));
+        currentTest.innerHTML = <div class="watch-timer"></div><span>${tests[testIndex] || tests[tests.length-1]}</span>;
 
         if (progress >= 100) {
           clearInterval(interval);
           loadingSpinner.classList.add('hidden');
-          scanStatus.classList.add('hidden');
-          
-          const result = getScanResult();
-          displayResults(result);
+          setTimeout(() => {
+            displayResults(isVulnerable);
+          }, 800);
         }
       }, 400);
     });
@@ -287,13 +310,18 @@
     urlInput.addEventListener('input', () => {
       const url = urlInput.value.trim();
       if (url && !validateURL(url)) {
-        errorMessage.innerText = 'Please enter a valid and complete URL.';
+        errorMessage.innerText = 'Please include protocol (http:// or https://)';
         errorMessage.classList.remove('hidden');
       } else {
         errorMessage.classList.add('hidden');
       }
     });
-  </script>
 
+    // Initialize theme based on system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+      themeToggle.innerText = '☀';
+    }
+  </script>
 </body>
 </html>
