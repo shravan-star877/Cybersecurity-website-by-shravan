@@ -84,12 +84,6 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .scan-timer {
-      font-family: monospace;
-      font-size: 0.9rem;
-      color: #4f46e5;
-      margin-left: 8px;
-    }
   </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 dark:text-white min-h-screen flex flex-col items-center justify-center p-4">
@@ -114,13 +108,7 @@
     </button>
 
     <div id="scan-status" class="hidden mt-4" aria-live="polite">
-      <div class="flex justify-between mb-2">
-        <div class="text-sm text-gray-600 dark:text-gray-300">Scan Progress: <span id="scan-percentage">0%</span></div>
-        <div class="text-sm text-indigo-600 flex items-center">
-          <span>Time elapsed:</span>
-          <span id="scan-timer" class="scan-timer">00:00</span>
-        </div>
-      </div>
+      <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">Scan Progress: <span id="scan-percentage">0%</span></div>
       <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
         <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
       </div>
@@ -134,9 +122,6 @@
     <div id="results" class="hidden mt-4 text-sm" aria-live="assertive">
       <div id="scan-summary" class="text-lg font-bold"></div>
       <div id="vulnerabilities-list" class="mt-2 space-y-2"></div>
-      <div class="mt-2 text-sm text-gray-500">
-        Scan duration: <span id="final-scan-time" class="font-semibold">00:00</span>
-      </div>
       <button onclick="location.reload()" class="mt-4 text-indigo-600 underline">🔁 Scan another URL</button>
     </div>
   </div>
@@ -168,33 +153,9 @@
     const toast = document.getElementById('toast');
     const scanSummary = document.getElementById('scan-summary');
     const vulnerabilitiesList = document.getElementById('vulnerabilities-list');
-    const scanTimer = document.getElementById('scan-timer');
-    const finalScanTime = document.getElementById('final-scan-time');
 
     // Track scan count
     let scanCount = 0;
-    let timerInterval;
-    let seconds = 0;
-
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-      const secs = (seconds % 60).toString().padStart(2, '0');
-      return ${mins}:${secs};
-    }
-
-    function startTimer() {
-      seconds = 0;
-      scanTimer.textContent = formatTime(seconds);
-      timerInterval = setInterval(() => {
-        seconds++;
-        scanTimer.textContent = formatTime(seconds);
-      }, 1000);
-    }
-
-    function stopTimer() {
-      clearInterval(timerInterval);
-      finalScanTime.textContent = formatTime(seconds);
-    }
 
     function showToast(message, type = 'success') {
       toast.textContent = message;
@@ -258,7 +219,6 @@
     function displayResults(isVulnerable) {
       scanStatus.classList.add('hidden');
       results.classList.remove('hidden');
-      stopTimer();
       
       const vulnerabilities = getRandomVulnerabilityDetails(isVulnerable);
       vulnerabilitiesList.innerHTML = '';
@@ -309,7 +269,6 @@
       scanStatus.classList.remove('hidden');
       results.classList.add('hidden');
       loadingSpinner.classList.remove('hidden');
-      startTimer();
 
       // Increment scan count and determine if this should be a negative scan
       scanCount++;
