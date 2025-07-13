@@ -47,6 +47,24 @@
       transform-origin: left center;
       animation: rotateHour 8s linear infinite;
     }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      background-color: #38a169;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
     @keyframes rotateHour {
       0% { transform: translate(-50%, -50%) rotate(0deg); }
       100% { transform: translate(-50%, -50%) rotate(360deg); }
@@ -63,7 +81,7 @@
     🌙
   </button>
 
-  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full relative">
     <div class="text-center mb-4">
       <div class="text-4xl font-bold text-indigo-700">🌐 ScanShield</div>
       <div class="text-xs text-gray-500 mt-2">Advanced Web Protection</div>
@@ -101,6 +119,14 @@
     </div>
   </div>
 
+  <div class="mt-8 text-center text-gray-500 text-sm">
+    &copy; 2025 ScanShield - Created by Shravan Natulkar
+  </div>
+
+  <div id="toast" class="toast">
+    Scan completed successfully!
+  </div>
+
   <script>
     const themeToggle = document.getElementById('theme-toggle');
     themeToggle.addEventListener('click', () => {
@@ -117,6 +143,14 @@
     const results = document.getElementById('results');
     const errorMessage = document.getElementById('error-message');
     const loadingSpinner = document.getElementById('loading-spinner');
+    const toast = document.getElementById('toast');
+
+    function showToast() {
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
 
     // Function to validate URL
     function validateURL(url) {
@@ -159,6 +193,7 @@
           loadingSpinner.classList.add('hidden');
           scanStatus.classList.add('hidden');
           results.classList.remove('hidden');
+          showToast();
         }
       }, 400);
     });
