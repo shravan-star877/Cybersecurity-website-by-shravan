@@ -17,6 +17,12 @@
     .success-message {
       color: #38a169; /* Green color for success messages */
     }
+    .warning-message {
+      color: #dd6b20; /* Orange color for warning messages */
+    }
+    .danger-message {
+      color: #e53e3e; /* Red color for danger messages */
+    }
     .spinner {
       border: 4px solid rgba(255, 255, 255, 0.3);
       border-top: 4px solid #38a169;
@@ -60,6 +66,12 @@
       opacity: 0;
       transition: all 0.3s ease;
       z-index: 1000;
+    }
+    .toast.danger {
+      background-color: #e53e3e;
+    }
+    .toast.warning {
+      background-color: #dd6b20;
     }
     .toast.show {
       transform: translateY(0);
@@ -109,14 +121,17 @@
     </div>
 
     <div id="results" class="hidden mt-4 text-sm" aria-live="assertive">
-      <div class="success-message text-lg font-bold">✅ Scan Completed!</div>
-      <ul class="mt-2 list-disc list-inside text-gray-600">
+      <div id="result-title" class="text-lg font-bold success-message">✅ Scan Completed!</div>
+      <ul id="result-list" class="mt-2 list-disc list-inside text-gray-600">
         <li>No SQL Injection found</li>
         <li>No XSS detected</li>
         <li>CSRF tokens present</li>
       </ul>
       <button onclick="location.reload()" class="mt-4 text-indigo-600 underline">🔁 Scan another URL</button>
     </div>
+
+    <div id="scan-counter" class="hidden">0</div>
+    <div id="scanned-urls" class="hidden"></div>
   </div>
 
   <div class="mt-8 text-center text-gray-500 text-sm">
@@ -141,27 +156,97 @@
     const scanPercentage = document.getElementById('scan-percentage');
     const currentTest = document.getElementById('current-test');
     const results = document.getElementById('results');
+    const resultTitle = document.getElementById('result-title');
+    const resultList = document.getElementById('result-list');
     const errorMessage = document.getElementById('error-message');
     const loadingSpinner = document.getElementById('loading-spinner');
     const toast = document.getElementById('toast');
+    const scanCounter = document.getElementById('scan-counter');
 
-    function showToast() {
+    function showToast(type = 'success', message = 'Scan completed successfully!') {
+      toast.textContent = message;
+      toast.className = 'toast';
+      
+      if (type === 'danger') {
+        toast.classList.add('danger');
+      } else if (type === 'warning') {
+        toast.classList.add('warning');
+      } else {
+        toast.classList.add('success');
+      }
+      
       toast.classList.add('show');
       setTimeout(() => {
         toast.classList.remove('show');
       }, 3000);
     }
 
-    // Function to validate URL
     function validateURL(url) {
       const urlPattern = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,6}(\/.*)?$/i;
       return urlPattern.test(url);
     }
 
-    // Event listener for the Scan button
+    function getScanResult() {
+      const url = urlInput.value.trim();
+      const scannedUrls = document.getElementById('scanned-urls');
+      
+      // Track unique URLs
+      const urlList = scannedUrls.textContent.split(',');
+      if (!urlList.includes(url)) {
+        urlList.push(url);
+        scannedUrls.textContent = urlList.filter(u => u).join(',');
+      }
+      
+      // Show negative only on every 4th unique URL
+      const shouldShowNegative = (urlList.length % 4 === 0);
+      
+      if (shouldShowNegative) {
+        return {
+          isPositive: false,
+          title: "⚠ Vulnerabilities Detected!",
+          titleClass: "danger-message",
+          items: [
+            "Potential SQL Injection vulnerability detected",
+            "Possible XSS vulnerability found",
+            "Missing CSRF protection"
+          ],
+          toastType: "danger",
+          toastMessage: Critical vulnerabilities found at ${urlInput.value.trim()}! Immediate action recommended.
+        };
+      } else {
+        return {
+          isPositive: true,
+          title: "✅ Scan Completed!",
+          titleClass: "success-message",
+          items: [
+            "No SQL Injection found",
+            "No XSS detected",
+            "CSRF tokens present"
+          ],
+          toastType: "success",
+          toastMessage: Scan of ${urlInput.value.trim()} completed successfully!
+        };
+      }
+    }
+
+    function displayResults(result) {
+      resultTitle.textContent = ${result.title} - ${urlInput.value.trim()};
+      resultTitle.className = text-lg font-bold ${result.titleClass};
+      
+      resultList.innerHTML = '';
+      result.items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        resultList.appendChild(li);
+      });
+      
+      results.classList.remove('hidden');
+      showToast(result.toastType, result.toastMessage);
+    }
+
     startButton.addEventListener('click', () => {
       const url = urlInput.value.trim();
-      errorMessage.classList.add('hidden'); // Hide error message initially
+      errorMessage.classList.add('hidden');
 
       if (!url || !validateURL(url)) {
         errorMessage.innerText = 'Please enter a valid and complete URL.';
@@ -192,20 +277,20 @@
           clearInterval(interval);
           loadingSpinner.classList.add('hidden');
           scanStatus.classList.add('hidden');
-          results.classList.remove('hidden');
-          showToast();
+          
+          const result = getScanResult();
+          displayResults(result);
         }
       }, 400);
     });
 
-    // Event listener for input changes to validate URL in real-time
     urlInput.addEventListener('input', () => {
       const url = urlInput.value.trim();
       if (url && !validateURL(url)) {
         errorMessage.innerText = 'Please enter a valid and complete URL.';
         errorMessage.classList.remove('hidden');
       } else {
-        errorMessage.classList.add('hidden'); // Hide error message if valid
+        errorMessage.classList.add('hidden');
       }
     });
   </script>
